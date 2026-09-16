@@ -65,12 +65,12 @@
 
 | Что | Где |
 | --- | --- |
-| Действующее ТЗ | `elg-docs/tz/ELG-TZ-v3-4-gradprofil.md` (v3.5 в репозитории нет, см. `DOCS.md`); старые версии — `tz/archive/` |
+| Действующее ТЗ | `elg-docs/tz/ELG-TZ-v3-5-gradprofil.md`; старые версии — `tz/archive/` |
 | Цены и SKU | `elg-docs/PRICE.md` — единственный источник |
 | Реестр документов и что чем заменено | `elg-docs/DOCS.md` |
 | Канон | `elg-docs/kanon/KANON-pravila.md` и раздел 3 этого файла |
 | Статус фирмы и сайта | `elg-docs/status/ELAWYERS-STATUS.md`, `status/STATUS-DELTA-*`, контекст фирмы `status/KONTEKST-ELAWYERS.md` |
-| Последнее задание | `elg-docs/zadaniya/` — файл с самой поздней датой в имени |
+| Последнее задание | `elg-docs/zadaniya/` — по таблице «Задания» в `DOCS.md` (имена файлов с датами в двух форматах, сортировка по имени ненадёжна) |
 | Отчёты, сводки, сборники | `elg-docs/otchety/` |
 | Тексты продаж, оферты | `elg-docs/teksty/` |
 | Скрипты, индексы, профили, справки, выписки, конфиг реквизитов | приватный `elg-pzz` (`scripts/`, `out/`, `ca/`, `tools/`); запуск — `elg-pzz/README-zapusk.md` |

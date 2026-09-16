@@ -16,7 +16,7 @@
 В начале каждого разговора Claude в чате клонирует репозиторий и читает `CLAUDE.md`, `PRICE.md`, `DOCS.md` и последнее задание в `zadaniya/`:
 
 ```bash
-git clone https://github.com/<владелец>/elg-docs.git
+git clone https://github.com/elawyersgroup-alt/elg-docs.git
 ```
 
 С этого момента отчёты Claude Code в чат не носятся: они коммитятся в `otchety/` в день сдачи, а Claude в чате читает их из репозитория.

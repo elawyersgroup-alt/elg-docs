@@ -96,7 +96,7 @@
 
 ## В репозитории сайта `elg-site` (публичный, https://github.com/elawyersgroup-alt/elg-site)
 
-Исходники argument-law.ru: 52 HTML (51 с Hostland + новая `proverka-izyatie-krt.html` от 17.09, не опубликована до подстановок), `sitemap.xml`, `robots.txt`, иконки, PDF; `README.md` об устройстве меню, подвала и стилей; `img/samples/` — шесть PNG-образцов на синтетическом номере; `tools/add_nav_links.py` — массовая правка меню и подвала. Правило: источник истины — репозиторий, на Hostland уходит только закоммиченное.
+Исходники argument-law.ru: 52 страницы (51 с Hostland + новая `proverka-izyatie-krt.html` от 17.09, не опубликована до подстановок) и 3 файла подтверждения прав (Вебмастер, Google), `sitemap.xml`, `robots.txt`, иконки, PDF; `README.md` об устройстве меню, подвала и стилей; `img/samples/` — шесть PNG-образцов на синтетическом номере; `tools/add_nav_links.py` — массовая правка меню и подвала. Правило: источник истины — репозиторий, на Hostland уходит только закоммиченное.
 
 ## В приватном репозитории `elg-pzz` (не здесь)
 

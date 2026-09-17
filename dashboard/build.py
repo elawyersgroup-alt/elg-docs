@@ -138,7 +138,7 @@ a{{color:var(--accent)}} a:focus-visible,.chip:focus-visible{{outline:2px solid 
  <div class="tile warn"><p class="eyebrow">Оплаты линии «Град»</p><div class="big">0</div><div class="sub">цены — гипотеза до первых десяти оплат [Speculation]</div></div>
  <div class="tile"><p class="eyebrow">Индекс актов</p><div class="big">{esc(f"{index_size:,}".replace(",", NB))}</div><div class="sub">актов mos.ru и ДГИ · собран {esc(index_date)} ({esc(idx_age())})</div></div>
  <div class="tile"><p class="eyebrow">Документы собраны</p><div class="big">{n_spravka}<span style="font-size:16px"> Г2</span> · {n_snesut - n_synth}<span style="font-size:16px"> Г1а</span></div><div class="sub">{n_synth} демонстрационный образец с водяным знаком; живых выписок ЕГРН разобрано: {egrn_parsed}</div></div>
- <div class="tile"><p class="eyebrow">Задания Claude Code</p><div class="big">{tasks_done}</div><div class="sub">файлов заданий исполнено, {tasks_active} действует; всего задач 1–46</div></div>
+ <div class="tile"><p class="eyebrow">Задания Claude Code</p><div class="big">{tasks_done}</div><div class="sub">файлов заданий исполнено, {tasks_active} действует; всего задач 1–49</div></div>
 </div>
 
 <div class="cols">

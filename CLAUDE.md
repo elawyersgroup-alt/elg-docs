@@ -76,5 +76,5 @@
 | Тексты продаж, оферты | `elg-docs/teksty/` |
 | Скрипты, индексы, профили, справки, выписки, конфиг реквизитов | приватный `elg-pzz` (`scripts/`, `out/`, `ca/`, `tools/`); запуск — `elg-pzz/README-zapusk.md` |
 | Сырьё 65 ГБ (акты, документы ДГИ, книги ПЗЗ) | только на флешке SANDISK в `pzz/raw/`; в git не кладётся |
-| Адреса | публичный https://github.com/elawyersgroup-alt/elg-docs ; приватный https://github.com/elawyersgroup-alt/elg-pzz (доступ по SSH-ключу Mac) |
+| Адреса | публичный https://github.com/elawyersgroup-alt/elg-docs ; приватный https://github.com/elawyersgroup-alt/elg-pzz (доступ по SSH-ключу Mac); сайт https://github.com/elawyersgroup-alt/elg-site (публичный, исходники argument-law.ru; правило: на Hostland уходит только закоммиченное) |
 | Источник истины | репозитории; флешка — копия на дату |

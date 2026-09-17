@@ -42,7 +42,8 @@ def repo_info(path, name):
     log_today = git(path, "log", f"--since={today}T00:00:00", "--format=%cd|%h|%s", "--date=format:%H:%M")
     files = git(path, "ls-files"); nfiles = len(files.splitlines()) if files else 0
     return dict(name=name, commits=int(n or 0), last=last, files=nfiles, today=[l.split("|", 2) for l in log_today.splitlines() if l])
-repos = [repo_info(DOCS, "elg-docs (публичный)"), repo_info(PZZ, "elg-pzz (приватный)")]
+SITE = os.path.join(os.path.dirname(DOCS), "elg-site")
+repos = [repo_info(DOCS, "elg-docs (публичный)"), repo_info(PZZ, "elg-pzz (приватный)")] + ([repo_info(SITE, "elg-site (сайт, публичный)")] if os.path.isdir(SITE) else [])
 # ---------- elg-pzz/out: только счётчики ----------
 metas = sorted(glob.glob(f"{PZZ}/out/snesut/*.meta.json"))
 n_snesut = len(metas); n_synth = 0; index_date = ""; index_size = 0; ver = ""; egrn_parsed = 0
@@ -60,7 +61,6 @@ def idx_age():
     return f"{a} дн. назад"
 # ---------- ждёт Игоря (ведётся вручную, даты абсолютные) ----------
 PENDING = [
-    ("Создать репозиторий elg-site на GitHub (публичный)", "снимок сайта закоммичен локально (65 файлов); после создания — git push -u origin main", "late"),
     ("Три ссылки ЮKassa: 2 900 ₽ (Г1а), 9 900 ₽ (Г2), позже 3 900 ₽ (Г1б)", "как для экспресс-разбора; нужны для страниц проверки и Градпрофиля", "wait"),
     ("ИАИС ОГД: ответ на запрос от 07.09.2026", "регламент — 5 рабочих дней, срок вышел 14.09; без ответа Г3 не выпускается", "late"),
     ("Выписка ЕГРН по пилотному участку (по тарифу Росреестра)", "нужна первая живая XML-выписка: проверить разбор, снять запрет с Г1б", "wait"),

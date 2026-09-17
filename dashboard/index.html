@@ -35,7 +35,7 @@ a{color:var(--accent)} a:focus-visible,.chip:focus-visible{outline:2px solid var
 @media (prefers-reduced-motion: no-preference){.step .bar::after{transition:width .4s ease}}
 </style>
 <div class="wrap">
-<header><h1>ELG Градпрофиль <small>панель состояния</small></h1><div class="meta">собрано 17.09.2026 12:25 · источники: PRICE.md, DOCS.md, git, elg-pzz/out (только счётчики)</div></header>
+<header><h1>ELG Градпрофиль <small>панель состояния</small></h1><div class="meta">собрано 17.09.2026 12:29 · источники: PRICE.md, DOCS.md, git, elg-pzz/out (только счётчики)</div></header>
 
 <div class="tiles">
  <div class="tile hot"><p class="eyebrow">Прайс</p><div class="big">10 SKU</div><div class="sub">утверждён Игорем 17.09.2026.</div></div>
@@ -75,16 +75,18 @@ a{color:var(--accent)} a:focus-visible,.chip:focus-visible{outline:2px solid var
 <li><span class="mono t">04:03</span> <span class="repo">elg-pzz</span> Цены и названия продуктов из config_price.json (задача 46)</li>
 <li><span class="mono t">04:05</span> <span class="repo">elg-docs</span> Отчёт по заданию 17.09 (задачи 44–46): прайс в документах, текстах и скриптах</li>
 <li><span class="mono t">04:08</span> <span class="repo">elg-docs</span> Панель состояния проекта: dashboard/build.py и index.html</li>
-<li><span class="mono t">12:24</span> <span class="repo">elg-pzz</span> Цены из клиентских документов убраны, выписка ЕГРН — по тарифу Росреестра без числа (решение Игоря 17.09)</li></ul></section>
+<li><span class="mono t">12:24</span> <span class="repo">elg-pzz</span> Цены из клиентских документов убраны, выписка ЕГРН — по тарифу Росреестра без числа (решение Игоря 17.09)</li>
+<li><span class="mono t">12:25</span> <span class="repo">elg-docs</span> Отчёт 17.09 дополнен решениями Игоря (цен в клиентских документах нет), дашборд пересобран</li>
+<li><span class="mono t">12:29</span> <span class="repo">elg-pzz</span> Верификатор: любой знак ₽ в теле клиентского документа блокирует файл (решение Игоря 17.09, окончательное)</li></ul></section>
  </div>
 </div>
 
 <section class="card"><p class="eyebrow">Общая память</p><h2>Репозитории и контроль</h2><div class="repos">
-<div class="repo-card"><span class="n">elg-docs (публичный)</span><span class="mono">9 коммитов · 57 файлов</span><span class="meta">последний: 17.09.2026 04:08 — Панель состояния проекта: dashboard/build.py и index.html</span></div><div class="repo-card"><span class="n">elg-pzz (приватный)</span><span class="mono">5 коммитов · 965 файлов</span><span class="meta">последний: 17.09.2026 12:24 — Цены из клиентских документов убраны, выписка ЕГРН — по тарифу Росреес</span></div>
+<div class="repo-card"><span class="n">elg-docs (публичный)</span><span class="mono">10 коммитов · 57 файлов</span><span class="meta">последний: 17.09.2026 12:25 — Отчёт 17.09 дополнен решениями Игоря (цен в клиентских документах нет)</span></div><div class="repo-card"><span class="n">elg-pzz (приватный)</span><span class="mono">6 коммитов · 965 файлов</span><span class="meta">последний: 17.09.2026 12:29 — Верификатор: любой знак ₽ в теле клиентского документа блокирует файл </span></div>
  <div class="repo-card"><span class="n">Верификаторы</span><span class="mono">snesut.py — 10 проверок · spravka.py — 8</span><span class="meta">блокируют файл: служебные слова, пустые значения, зелёный без выписки, синтетика без знака, несогласованный глагол, сумма с ₽ вне config_price.json</span></div>
  <div class="repo-card"><span class="n">Инструменты</span><span class="mono">krt_lookup · egrn_xml · nspd_addr · nspd_bld</span><span class="meta">фон ложных класс-соседей нечёткого поиска: 9 из 100 реальных номеров вне индекса (замер 11.09.2026)</span></div>
 </div></section>
 
 <section class="card"><p class="eyebrow">Канон</p><h2>Правила, которые не обсуждаются</h2><div class="canon"><div>ничего не додумывать: не найдено — UNKNOWN, а не «нет ограничений»</div><div>у каждого вывода [Certain] / [Likely] / [Speculation]</div><div>выписка ЕГРН — источник истины, индекс актов — опережающий сигнал</div><div>зелёный итог только с разобранной выпиской</div><div>замер — с указанием популяции</div><div>синтетика — только на несуществующем номере с водяным знаком</div><div>в теле документа ничего, что юрист не прочитал бы вслух</div><div>цены и ТЗ меняет только Игорь; в клиентских документах цен нет, названия — из config_price.json</div><div>клиентские данные — только в приватном elg-pzz</div></div></section>
-<footer>Панель собирается скриптом <span class="mono">dashboard/build.py</span> из репозитория elg-docs; цифры цен — только из PRICE.md; из приватного репозитория берутся счётчики, кадастровые номера клиентов не печатаются. Версия скриптов: snesut 2026-09-17 v4 (задачи 31, 32, 35–37, 46: названия из config_price.json; цен в документе нет — решение Игоря 17.09).</footer>
+<footer>Панель собирается скриптом <span class="mono">dashboard/build.py</span> из репозитория elg-docs; цифры цен — только из PRICE.md; из приватного репозитория берутся счётчики, кадастровые номера клиентов не печатаются. Версия скриптов: snesut 2026-09-17 v4 (задачи 31, 32, 35–37, 46: названия из config_price.json; любой ₽ в теле блокирует файл — решение Игоря 17.09).</footer>
 </div>

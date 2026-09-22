@@ -55,6 +55,10 @@ for f in metas:
 n_spravka = len(glob.glob(f"{PZZ}/out/profiles/spravka_*.md"))
 idx_file = f"{PZZ}/out/krt_index/index_date.txt"
 if os.path.exists(idx_file): index_date = open(idx_file).read().strip() or index_date
+idx_csv = f"{PZZ}/out/krt_index/krt_index.csv"  # число актов — по самому индексу, а не по последнему отчёту: иначе плашка отстаёт от пересборки
+if os.path.exists(idx_csv):
+    import csv as _csv
+    index_size = len({(r["doc_type"], r["doc_number"], r["doc_date"]) for r in _csv.DictReader(open(idx_csv, encoding="utf-8"))}) or index_size
 def idx_age():
     m = re.match(r"(\d{2})\.(\d{2})\.(\d{4})", index_date or "")
     if not m: return ""

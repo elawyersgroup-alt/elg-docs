@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Сборка панели состояния проекта ELG Градпрофиль → dashboard/index.html.
-Источники: PRICE.md (линейка и статусы), DOCS.md (задания), git log обоих репозиториев, elg-pzz/out (сколько документов собрано, дата индекса).
-Клиентские данные не печатаются: из приватного репозитория берутся только счётчики. Запуск: python3 dashboard/build.py [путь к elg-pzz]."""
+Источники: PRICE.md (линейка и статусы), DOCS.md (задания), git (число правок, время, затронутые разделы), elg-pzz/out (сколько документов собрано, дата индекса).
+Тексты коммитов и писем панель не цитирует (решение Игоря 23.09.2026): только счётчики, время и названия разделов верхнего уровня;
+из приватного elg-pzz — лишь разделы из списка AREAS, остальное — «прочее». Клиентские данные не печатаются. Запуск: python3 dashboard/build.py [путь к elg-pzz]."""
 import re, os, sys, json, glob, subprocess, datetime, html
 DOCS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PZZ = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(DOCS), "elg-pzz")
@@ -38,11 +39,31 @@ tasks_done = sum(1 for l in task_rows if "исполнено" in l)
 tasks_active = sum(1 for l in task_rows if "действует" in l)
 # ---------- git ----------
 def repo_info(path, name):
-    n = git(path, "rev-list", "--count", "HEAD"); last = git(path, "log", "-1", "--format=%cd|%s", "--date=format:%d.%m.%Y %H:%M")
+    n = git(path, "rev-list", "--count", "HEAD"); last = git(path, "log", "-1", "--format=%cd", "--date=format:%d.%m.%Y %H:%M")
     today = datetime.date.today().isoformat()
-    log_today = git(path, "log", f"--since={today}T00:00:00", "--format=%cd|%h|%s", "--date=format:%H:%M")
+    log_today = git(path, "log", f"--since={today}T00:00:00", "--format=@@%cd", "--date=format:%H:%M", "--name-only")
+    times, areas = [], []
+    for l in log_today.splitlines():
+        if l.startswith("@@"): times.append(l[2:])
+        elif l.strip():
+            a = area(name, l.strip())
+            if a not in areas: areas.append(a)
     files = git(path, "ls-files"); nfiles = len(files.splitlines()) if files else 0
-    return dict(name=name, commits=int(n or 0), last=last, files=nfiles, today=[l.split("|", 2) for l in log_today.splitlines() if l])
+    return dict(name=name, commits=int(n or 0), last=last, files=nfiles, times=sorted(times), areas=areas)
+# Разделы для «Сегодня»: только верхний уровень. У приватного elg-pzz — только из этого списка, прочее не называется.
+AREAS = {
+    "elg-docs": {"dashboard": "панель", "status": "статус", "otchety": "отчёты", "teksty": "тексты", "kanon": "канон", "tz": "ТЗ",
+                 "zadaniya": "задания", "CLAUDE.md": "правила", "PRICE.md": "прайс", "DOCS.md": "список заданий"},
+    "elg-pzz": {"scripts": "скрипты", "out": "профили и данные", "site-server": "серверные файлы", "KANON-pravila.md": "канон",
+                "README-zapusk.md": "инструкции", "README.md": "инструкции", "RUNBOOK-zakaz.md": "порядок заказа", "outreach": "аутрич",
+                "privacy": "приватность", "tools": "инструменты", "ca": "сертификаты"},
+    "elg-site": {"img": "картинки", "sitemap.xml": "карта сайта", "robots.txt": "robots.txt"},
+}
+def area(repo_name, path):
+    repo, top = repo_name.split(" ")[0], path.split("/")[0]
+    if top in AREAS.get(repo, {}): return AREAS[repo][top]
+    if repo == "elg-site": return "страницы" if top.endswith(".html") else "обработчики" if top.endswith(".php") else "прочее"
+    return top if repo == "elg-docs" else "прочее"
 SITE = os.path.join(os.path.dirname(DOCS), "elg-site")
 repos = [repo_info(DOCS, "elg-docs (публичный)"), repo_info(PZZ, "elg-pzz (приватный)")] + ([repo_info(SITE, "elg-site (сайт, публичный)")] if os.path.isdir(SITE) else [])
 # ---------- elg-pzz/out: только счётчики ----------
@@ -143,13 +164,10 @@ def price_table(line):
         out.append(f'<tr><td class="mono">{esc(r["sku"])}</td><td><b>{esc(r["name"])}</b><span class="inside">{esc(r["inside"][:150])}{"…" if len(r["inside"])>150 else ""}</span></td><td>{esc(r["term"])}</td><td class="num">{esc(r["cost"])}</td>{pack}<td><span class="chip {k}">{esc(lab)}</span><span class="state">{esc(r["state"])}</span></td></tr>')
     out.append("</tbody></table>"); return "\n".join(out)
 def today_list():
-    items = []
-    for r in repos:
-        for t in r["today"]:
-            if len(t) == 3: items.append((t[0], r["name"].split(" ")[0], t[2]))
-    items.sort()
-    if not items: return "<li>сегодня коммитов нет</li>"
-    return "\n".join(f'<li><span class="mono t">{esc(a)}</span> <span class="repo">{esc(b)}</span> {esc(c.split(chr(10))[0])}</li>' for a, b, c in items)
+    items = [r for r in repos if r["times"]]
+    if not items: return "<li>сегодня правок нет</li>"
+    return "\n".join(f'<li><span class="mono t">{esc(r["times"][0])}–{esc(r["times"][-1])}</span> <span class="repo">{esc(r["name"].split(" ")[0])}</span> '
+                     f'{len(r["times"])} правок · {esc(", ".join(r["areas"]) or "—")}</li>' for r in items)
 funnel = [("Г1а", "Проверка, экспресс", 2900), ("Г2", "Градпрофиль-экспресс", 9900), ("Г3", "Градпрофиль-полный", 25000), ("Г5", "Юридическая работа, от", 100000)]
 def rub(v): return f"{v:,}".replace(",", NB) + NB + "₽"
 funnel_html = "".join(f'<div class="step"><div class="bar" style="--w:{max(6, round(100*(v/100000)**0.5))}%"></div><div class="lbl"><span class="mono">{s}</span> {esc(n)}</div><div class="val mono">{rub(v)}</div></div>' for s, n, v in funnel)
@@ -211,12 +229,12 @@ a{{color:var(--accent)}} a:focus-visible,.chip:focus-visible{{outline:2px solid 
   <section class="card"><p class="eyebrow">Внешние ответы</p><h2>Ждём ответа</h2><ul class="plain">{"".join(f'<li><span class="dot {k}"></span><div><b>{esc(t)}</b><span class="why">{esc(w)}</span></div></li>' for t, w, k in WAITING)}</ul></section>
   <section class="card"><p class="eyebrow">Решения и внешние действия</p><h2>Ждёт Игоря</h2><ul class="plain">{"".join(f'<li><span class="dot {k}"></span><div><b>{esc(t)}</b><span class="why">{esc(w)}</span></div></li>' for t, w, k in PENDING)}</ul></section>
   <section class="card"><p class="eyebrow">Воронка линии «Град»</p><h2>Куда ведёт проверка за 2{NB}900{NB}₽</h2><div class="funnel">{funnel_html}</div><p class="meta" style="margin:10px 0 0">Конверсии между ступенями не измерены: оплат по линии пока нет. Цифра появится после первых десяти.</p></section>
-  <section class="card"><p class="eyebrow">Сегодня, {esc(datetime.date.today().strftime("%d.%m.%Y"))}</p><h2>Коммиты</h2><ul class="log">{today_list()}</ul></section>
+  <section class="card"><p class="eyebrow">Сегодня, {esc(datetime.date.today().strftime("%d.%m.%Y"))}</p><h2>Правки</h2><ul class="log">{today_list()}</ul></section>
  </div>
 </div>
 
 <section class="card"><p class="eyebrow">Общая память</p><h2>Репозитории и контроль</h2><div class="repos">
-{"".join(f'<div class="repo-card"><span class="n">{esc(r["name"])}</span><span class="mono">{r["commits"]} коммитов · {r["files"]} файлов</span><span class="meta">последний: {esc(r["last"].split("|")[0])} — {esc(r["last"].split("|",1)[1][:70] if "|" in r["last"] else "")}</span></div>' for r in repos)}
+{"".join(f'<div class="repo-card"><span class="n">{esc(r["name"])}</span><span class="mono">{r["commits"]} коммитов · {r["files"]} файлов</span><span class="meta">последняя правка: {esc(r["last"])}</span></div>' for r in repos)}
  <div class="repo-card"><span class="n">Верификаторы</span><span class="mono">snesut.py — 10 проверок · spravka.py — 8</span><span class="meta">блокируют файл: служебные слова, пустые значения, зелёный без выписки, синтетика без знака, несогласованный глагол, сумма с ₽ вне config_price.json</span></div>
  <div class="repo-card"><span class="n">Инструменты</span><span class="mono">krt_lookup · egrn_xml · nspd_addr · nspd_bld</span><span class="meta">фон ложных класс-соседей нечёткого поиска: 9 из 100 реальных номеров вне индекса (замер 11.09.2026)</span></div>
 </div></section>

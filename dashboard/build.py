@@ -189,6 +189,56 @@ kal_html = "" if not events else (
     '<p class="meta">Для календаря телефона: <span class="mono">meropriyatiya-glavnoe.ics</span> — топ-5, высокая и средне-высокая релевантность, сроки; '
     '<span class="mono">meropriyatiya-vse.ics</span> — всё. Файлы в «Загрузках» и в dashboard/ репозитория. На Маке: двойной щелчок по файлу, при импорте выбрать «Новый календарь»; '
     'чтобы обновить — удалить этот календарь и импортировать файл заново.</p></section>')
+# ---------- план продвижения: plany/STATUS-prodvizhenie.md → раздел панели и плитка ----------
+# План утверждён Игорем 25.09.2026 (plany/PLAN-prodvizhenie-2026-10-12.md). Статусы, сроки и отметки ведёт Code только в STATUS-prodvizhenie.md.
+PLAN_ST = f"{DOCS}/plany/STATUS-prodvizhenie.md"
+plan_dirs, plan_dl, plan_par = [], [], []
+if os.path.exists(PLAN_ST):
+    st = open(PLAN_ST, encoding="utf-8").read()
+    for c in md_rows(md_section(st, "Направления")):
+        if len(c) >= 7: plan_dirs.append(dict(n=c[0], name=c[1], status=c[2].strip().lower(), due=iso(c[3]), what=c[4], who=c[5], metric=c[6]))
+    for c in md_rows(md_section(st, "Сроки плана")):
+        if len(c) >= 7 and iso(c[1]): plan_dl.append(dict(s=iso(c[0]), e=iso(c[1]), label=c[2], what=c[3], who=c[4], dirn=c[5], mark=c[6].strip().lower()))
+    for c in md_rows(md_section(st, "Параллельно")):
+        if len(c) >= 3: plan_par.append(dict(what=c[0], status=c[1].strip().lower(), st=c[1].strip(), note=c[2]))
+plan_dl.sort(key=lambda d: (d["e"], d["s"] or TODAY))
+def plan_open(d): return not (d["mark"].startswith("сделано") or d["mark"].startswith("отменено"))
+plan_next = [d for d in plan_dl if plan_open(d) and d["e"] >= TODAY]
+plan_late = [d for d in plan_dl if plan_open(d) and d["e"] < TODAY]
+def plan_chip(status, due=None):
+    if status == "сделано": return ("go", "сделано")
+    if due and due < TODAY: return ("stop", "просрочено")
+    return {"в работе": ("ready", "в работе"), "ждёт игоря": ("wait", "ждёт Игоря")}.get(status, ("neutral", status or "не начато"))
+def plan_row(d):
+    k, lab = plan_chip(d["status"], d["due"])
+    when = (f'{d["due"]:%d.%m}<span class="why">{esc(until(d["due"]))}</span>' if d["due"] and d["status"] != "сделано" else (f'{d["due"]:%d.%m}' if d["due"] else "—"))
+    m = (f'<span class="m-only"><span class="chip {k}">{esc(lab)}</span> {d["due"]:%d.%m} · {esc(d["who"])}<br>Метрика: {esc(d["metric"])}</span>' if d["due"] else "")
+    return (f'<tr><td><b>{esc(d["n"])}. {esc(d["name"])}</b><span class="why">{esc(d["what"])}</span>{m}</td><td><span class="chip {k}">{esc(lab)}</span></td>'
+            f'<td class="mono">{when}</td><td>{esc(d["who"])}</td><td>{esc(d["metric"])}</td></tr>')
+def plan_dl_item(d, late=False):
+    k, lab = ("stop", "просрочено") if late else (("wait" if (d["e"] - TODAY).days <= 3 else "neutral"), until(d["e"]))
+    dirn = "" if d["dirn"] in ("", "—") else f' · направление {esc(d["dirn"])}'
+    return (f'<li><div class="when"><span class="mono">{esc(d["label"])}</span><span class="chip {k}">{esc(lab)}</span></div>'
+            f'<div><b>{esc(d["what"])}</b><span class="why">{esc(d["who"])}{dirn}{(" · " + esc(d["mark"])) if d["mark"] else ""}</span></div></li>')
+def par_item(p):
+    k = "go" if p["status"] == "сделано" else "wait"
+    return f'<li><span class="dot {k}"></span><div><b>{esc(p["what"])}</b><span class="why">{esc(p["st"])}{(" · " + esc(p["note"])) if p["note"] else ""}</span></div></li>'
+plan_reps = sorted(glob.glob(f"{DOCS}/otchety/prodvizhenie-*.md"))
+plan_rep = (f"последний — {os.path.basename(plan_reps[-1])}" if plan_reps else "первый — 02.10.2026")
+pn = (plan_late or plan_next or [None])[0]
+plan_tile = "" if not pn else (
+    f'<a class="tile{" warn" if plan_late or (pn["e"] - TODAY).days <= 3 else ""}" href="#plan"><p class="eyebrow">План продвижения · {"просрочено" if plan_late else "ближайший срок"}</p>'
+    f'<div class="big">{esc(pn["label"].split(" ")[0])}</div><div class="sub">{esc(pn["what"][:80])}{"…" if len(pn["what"]) > 80 else ""} · {esc(until(pn["e"]))}</div></a>')
+plan_html = "" if not plan_dirs else (
+    '<section class="card" id="plan"><p class="eyebrow">План продвижения · октябрь–декабрь 2026 · утверждён Игорем 25.09.2026</p><h2>Шесть направлений</h2>'
+    '<div class="scroll"><table class="sku plan"><thead><tr><th>Направление и что к сроку</th><th>Статус</th><th>Срок</th><th>Кто</th><th>Метрика</th></tr></thead><tbody>'
+    + "".join(plan_row(d) for d in plan_dirs) + '</tbody></table></div>'
+    + f'<div class="kal-top" style="margin:18px 0 0"><div><h3>Сроки плана{(" · просрочено: " + str(len(plan_late))) if plan_late else ""}</h3><ol class="dl">'
+    + "".join(plan_dl_item(d, True) for d in plan_late) + "".join(plan_dl_item(d) for d in plan_next[:8]) + '</ol>'
+    + (f'<p class="meta">Дальше ещё {len(plan_next) - 8} {plural(len(plan_next) - 8, ("срок", "срока", "сроков"))} — в plany/STATUS-prodvizhenie.md.</p>' if len(plan_next) > 8 else "")
+    + '</div><div><h3>Параллельно</h3><ul class="plain">' + "".join(par_item(p) for p in plan_par) + '</ul></div></div>'
+    + f'<p class="meta" style="margin:14px 0 0">Статусы и сроки — plany/STATUS-prodvizhenie.md; план и тексты — plany/ (публичная копия обезличена, полный текст — в elg-pzz). '
+      f'Отчёт по плану — по пятницам в otchety/prodvizhenie-ГГГГ-ММ-ДД.md, {esc(plan_rep)}.</p></section>')
 # ---------- ждёт Игоря (ведётся вручную, даты абсолютные) ----------
 # Внешние ответы: предложения и запросы, по которым ход не за нами. Отдельно от PENDING, чтобы не тонуть в нём.
 WAITING = [
@@ -198,6 +248,7 @@ WAITING = [
 ]
 
 PENDING = [
+    ("Оферта: пункт о сроке при большой загрузке — проект Claude готов, утверждает Игорь", "план продвижения, раздел 3: правило пиковой нагрузки — при 10 заказах проверки за рабочий день форма до оплаты показывает срок «до конца следующего рабочего дня», Игорю — уведомление; порог и текст меняет только Игорь. В оферту проверки, пункт 5 «Срок», — пункт об увеличенном сроке, сообщённом до оплаты. Проект — plany/TEKSTY-prodvizhenie-2026-09-25.md, раздел 7; последняя фраза (заказы, оплаченные до сообщения, — в обычный срок) добавлена Claude сверх правила. На сайт — только после утверждения", "wait"),
     ('Обращение в Москомархитектуру о нарушении срока по запросу в ИАИС ОГД от 07.09 — готово, отправляет Игорь', 'текст обращения — Игоря, 24.09, без правок. Файл obrashchenie-iais-ogd-2026-09-24.docx в «Загрузках»: обращение и отдельной страницей текст запроса 07.09 — подготовленный 03.09; если в форме mos.ru он был короче, приложить то, что показано в карточке запроса. До отправки: в карточке запроса проверить квитанцию — если выставлялась и не оплачена, запрос отклонён по п. 2.9.3 регламента и его надо подавать заново. Вписать номер запроса из кабинета и дату. Канал — карточка запроса в кабинете mos.ru («обращение по заявлению»), иначе электронная приёмная с выбором Москомархитектуры. Задание — zadaniya/OBRASHCHENIE-IAIS-OGD-2026-09-24.md. 24.09 Игорь подал сам запрос повторно; отправлять ли обращение о сроке по первому — решает Игорь', 'wait'),
     ('Витрина Градпрофиля выложена: /primer-spravki.html — пример справки на городском участке с торгов', 'решение Игоря 24.09: «Диус» не называем, витрина — участок на Брусилова, адрес страницы без названия объекта. Раздел 1: абзацы 1, 2 и 4 — «в том виде, как на снимках витрины» (Игорь 24.09), фраза «запрос подан 7 сентября, ответ пока не получен» оставлена — ответа нет; абзац 3 о зонах подтопления — вариант «а», дата из даты сбора. «Что делать» — текст Игоря, три абзаца: в справке для заказчика, на витрине этой части нет, о чём сказано в начале страницы. Данные реестра — на 24.09 14:51. Выложено заменой файлов со сверкой SHA-256: страница, схема участка, карточка «Пример на реальном участке» на странице Градпрофиля, адрес в карте сайта (56 адресов). Проверка сайта с --live: 76 файлов совпали с репозиторием, парность тегов без ошибок', 'go'),
     ('Правило утверждения: Claude пишет, Игорь правит — как статьи на Закон.ру; утверждение — текст, который Игорь прислал Code как свой', 'решение Игоря 24.09, вечер, дословно: «Утверждением считается текст, который Игорь прислал Code как свой, с правками или без». Записано в CLAUDE.md вместо прежней формулировки того же дня (о явном «утверждаю»), в README запуска и в верификатор справки. В справке — проверка 11: у каждого абзаца юриста отмечено, чей он; текст Claude без утверждения не собирается. По записям: Михельсона и Колокольников — тексты Игоря 21.09; Брусилова — абзацы 1, 2, 4 утверждены 24.09, абзац 3 — вариант «а», «Что делать» — текст Игоря; «Диус» — абзац 2 Игорь прислал Code 22.09 со словами «скопировать ему целиком», по новому правилу это утверждение; абзац 1 — финальная редакция, которую Игорь прислал 24.09, с двумя правками по его выбору. Дата-факт в абзаце юриста ({{дата_реестра}}) подставляется из даты сбора, утверждение абзаца о реестре сверяется с данными', 'go'),
@@ -310,6 +361,8 @@ section.card{{background:var(--surface);border:1px solid var(--line);border-radi
 .scroll{{overflow-x:auto}} table.sku{{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}}
 table.sku th{{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);border-bottom:1px solid var(--line);padding:6px 8px}}
 table.sku td{{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}} table.sku tr:last-child td{{border-bottom:0}}
+table.plan td .why{{display:block;color:var(--ink-2);font-size:13px;margin-top:3px}} table.plan td.mono{{white-space:nowrap}} table.plan{{min-width:760px}} .m-only{{display:none}}
+@media (max-width:560px){{table.plan{{min-width:0}} table.plan th:not(:first-child),table.plan td:not(:first-child){{display:none}} table.plan .m-only{{display:block;margin-top:6px;font-size:13px;color:var(--ink-2)}}}}
 th.num,td.num{{text-align:right;white-space:nowrap;font-family:"PT Mono",ui-monospace,monospace}} .inside{{display:block;color:var(--ink-2);font-size:12.5px;margin-top:2px;max-width:46ch}}
 .chip{{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}} .chip.go{{background:var(--go-bg);color:var(--go)}} .chip.wait{{background:var(--wait-bg);color:var(--wait)}} .chip.stop{{background:var(--stop-bg);color:var(--stop)}} .chip.ready{{background:var(--ready-bg);color:var(--ready)}} .chip.neutral{{background:var(--neutral-bg);color:var(--ink-2)}}
 .state{{display:block;color:var(--ink-2);font-size:12px;margin-top:3px;max-width:26ch}}
@@ -350,7 +403,7 @@ a{{color:var(--accent)}} a:focus-visible,.chip:focus-visible{{outline:2px solid 
 @media (prefers-reduced-motion: no-preference){{.step .bar::after{{transition:width .4s ease}}}}
 </style>
 <div class="wrap">
-<header><h1>ELG Градпрофиль <small>панель состояния</small></h1><div class="meta">собрано {esc(now)} · источники: PRICE.md, DOCS.md, git, elg-pzz/out (только счётчики){", meropriyatiya/KALENDAR.md" if events else ""}</div></header>
+<header><h1>ELG Градпрофиль <small>панель состояния</small></h1><div class="meta">собрано {esc(now)} · источники: PRICE.md, DOCS.md, git, elg-pzz/out (только счётчики){", plany/STATUS-prodvizhenie.md" if plan_dirs else ""}{", meropriyatiya/KALENDAR.md" if events else ""}</div></header>
 
 <div class="tiles">
  <div class="tile hot"><p class="eyebrow">Прайс</p><div class="big">{len(rows)} SKU</div><div class="sub">{esc(price_status)}</div></div>
@@ -358,8 +411,11 @@ a{{color:var(--accent)}} a:focus-visible,.chip:focus-visible{{outline:2px solid 
  <div class="tile"><p class="eyebrow">Индекс актов</p><div class="big">{esc(f"{index_size:,}".replace(",", NB))}</div><div class="sub">актов mos.ru и ДГИ · собран {esc(index_date)} ({esc(idx_age())})</div></div>
  <div class="tile"><p class="eyebrow">Документы собраны</p><div class="big">{n_spravka}<span style="font-size:16px"> Г2</span> · {n_snesut - n_synth}<span style="font-size:16px"> Г1а</span></div><div class="sub">{n_synth} демонстрационный образец с водяным знаком; живых выписок ЕГРН разобрано: {egrn_parsed}</div></div>
  <div class="tile"><p class="eyebrow">Задания Claude Code</p><div class="big">{tasks_done}</div><div class="sub">файлов заданий исполнено, {tasks_active} действует; всего задач 1–49</div></div>
+ {plan_tile}
  {kal_tile}
 </div>
+
+{plan_html}
 
 <div class="cols">
  <div style="display:grid;gap:20px;min-width:0">

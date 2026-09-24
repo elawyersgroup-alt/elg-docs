@@ -78,6 +78,7 @@
 | Последнее задание | `elg-docs/zadaniya/` — по таблице «Задания» в `DOCS.md` (имена файлов с датами в двух форматах, сортировка по имени ненадёжна) |
 | Отчёты, сводки, сборники | `elg-docs/otchety/` |
 | Тексты продаж, оферты | `elg-docs/teksty/` |
+| Календарь отраслевых мероприятий | `elg-docs/meropriyatiya/KALENDAR.md` — единственный источник: из него `dashboard/build.py` собирает раздел панели и `dashboard/meropriyatiya-*.ics`; решения Игоря и отметки о сроках — там же. Полный текст исследования с контактами организаторов — только `elg-pzz/outreach/meropriyatiya-2026-09-24-issledovanie.md` |
 | Скрипты, индексы, профили, справки, выписки, конфиг реквизитов | приватный `elg-pzz` (`scripts/`, `out/`, `ca/`, `tools/`); запуск — `elg-pzz/README-zapusk.md` |
 | Сырьё 65 ГБ (акты, документы ДГИ, книги ПЗЗ) | только на флешке SANDISK в `pzz/raw/`; в git не кладётся |
 | Адреса | публичный https://github.com/elawyersgroup-alt/elg-docs ; приватный https://github.com/elawyersgroup-alt/elg-pzz (доступ по SSH-ключу Mac); сайт https://github.com/elawyersgroup-alt/elg-site (публичный, исходники argument-law.ru; правило: на Hostland уходит только закоммиченное) |

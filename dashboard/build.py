@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Сборка панели состояния проекта ELG Градпрофиль → dashboard/index.html.
-Источники: PRICE.md (линейка и статусы), DOCS.md (задания), git (число правок, время, затронутые разделы), elg-pzz/out (сколько документов собрано, дата индекса).
+Источники: PRICE.md (линейка и статусы), DOCS.md (задания), git (число правок, время, затронутые разделы), elg-pzz/out (сколько документов собрано, дата индекса),
+meropriyatiya/KALENDAR.md (календарь мероприятий; из него же — dashboard/meropriyatiya-glavnoe.ics и meropriyatiya-vse.ics).
 Тексты коммитов и писем панель не цитирует (решение Игоря 23.09.2026): только счётчики, время и названия разделов верхнего уровня;
 из приватного elg-pzz — лишь разделы из списка AREAS, остальное — «прочее». Клиентские данные не печатаются. Запуск: python3 dashboard/build.py [путь к elg-pzz]."""
 import re, os, sys, json, glob, subprocess, datetime, html
@@ -53,7 +54,7 @@ def repo_info(path, name):
 # Разделы для «Сегодня»: только верхний уровень. У приватного elg-pzz — только из этого списка, прочее не называется.
 AREAS = {
     "elg-docs": {"dashboard": "панель", "status": "статус", "otchety": "отчёты", "teksty": "тексты", "kanon": "канон", "tz": "ТЗ",
-                 "zadaniya": "задания", "CLAUDE.md": "правила", "PRICE.md": "прайс", "DOCS.md": "список заданий"},
+                 "zadaniya": "задания", "CLAUDE.md": "правила", "PRICE.md": "прайс", "DOCS.md": "список заданий", "meropriyatiya": "мероприятия"},
     "elg-pzz": {"scripts": "скрипты", "out": "профили и данные", "site-server": "серверные файлы", "KANON-pravila.md": "канон",
                 "README-zapusk.md": "инструкции", "README.md": "инструкции", "RUNBOOK-zakaz.md": "порядок заказа", "outreach": "аутрич",
                 "privacy": "приватность", "tools": "инструменты", "ca": "сертификаты"},
@@ -85,6 +86,109 @@ def idx_age():
     if not m: return ""
     d = datetime.date(int(m.group(3)), int(m.group(2)), int(m.group(1))); a = (datetime.date.today() - d).days
     return f"{a} дн. назад"
+# ---------- календарь мероприятий: meropriyatiya/KALENDAR.md → раздел панели и два файла .ics ----------
+# Источник один — KALENDAR.md, без личных контактов (они в elg-pzz). Решения Игоря и отметки о сроках правятся там же, панель только читает.
+KAL = f"{DOCS}/meropriyatiya/KALENDAR.md"
+TODAY = datetime.date.today()
+MONTHS = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
+WD = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]
+def iso(s):
+    try: return datetime.date.fromisoformat(s.strip())
+    except Exception: return None
+def md_section(txt, title):
+    return txt.split(f"\n## {title}", 1)[1].split("\n## ", 1)[0] if f"\n## {title}" in txt else ""
+def md_rows(sec):
+    r = [[c.strip() for c in l.strip().strip("|").split("|")] for l in sec.splitlines() if l.startswith("|") and not re.match(r"^\|\s*-", l)]
+    return r[1:]
+events, deadlines, annual = [], [], []
+if os.path.exists(KAL):
+    kal = open(KAL, encoding="utf-8").read()
+    for blk in md_section(kal, "События").split("\n### ")[1:]:
+        lines = blk.strip().splitlines(); e = {"id": lines[0].strip()}
+        for l in lines[1:]:
+            m = re.match(r"-\s+([^:]+):\s*(.*)$", l.strip())
+            if m: e[m.group(1).strip()] = m.group(2).strip()
+        e["_s"], e["_e"] = iso(e.get("с", "")), iso(e.get("по", ""))
+        if e["_s"] and e["_e"]: events.append(e)
+    events.sort(key=lambda e: (e["_s"], e["_e"]))
+    for c in md_rows(md_section(kal, "Сроки и действия")):
+        if len(c) >= 8 and iso(c[1]): deadlines.append(dict(s=iso(c[0]), e=iso(c[1]), label=c[2], ev=c[3], short=c[4], what=c[5], who=c[6], mark=c[7].lower()))
+    deadlines.sort(key=lambda d: (d["e"], d["s"] or TODAY))
+    annual = md_rows(md_section(kal, "Ежегодные"))
+EV = {e["id"]: e for e in events}
+open_dl = [d for d in deadlines if d["mark"] not in ("сделано", "не делаем") and d["e"] >= TODAY]
+def plural(n, f):
+    n = abs(n) % 100
+    return f[2] if 11 <= n <= 14 else f[0] if n % 10 == 1 else f[1] if 2 <= n % 10 <= 4 else f[2]
+def until(d):
+    n = (d - TODAY).days
+    return "прошло" if n < 0 else "сегодня" if n == 0 else "завтра" if n == 1 else f"через {n} {plural(n, ('день', 'дня', 'дней'))}"
+def rel_level(r):
+    r = r.lower().replace("-", "–")
+    if r.startswith("высокая") or r.startswith("средняя–высокая"): return "hi"
+    return "mid" if r.startswith("средняя") else "lo"
+def status_chip(e):
+    s = e.get("статус", "")
+    if s.startswith("✅") and ("⚠" in s or s.startswith("✅ дата")): return ("wait", "дата подтверждена")
+    if s.startswith("✅"): return ("go", "подтверждено")
+    return ("neutral", "не проверено") if "не проверено" in s else ("neutral", "дата не объявлена")
+def decision_chip(d):
+    d = (d or "не принято").strip().lower()
+    if d in ("идём", "билет куплен", "выступаем"): return ("go", d)
+    if d == "заявка подана": return ("wait", d)
+    return ("stop", d) if d == "не идём" else ("neutral", "решение не принято")
+def ev_when(e):
+    if e.get("точность") == "ориентир": return esc(e.get("когда", ""))
+    s, t = e["_s"], e["_e"]
+    if s == t: return f'{s:%d.%m} <span class="wd">{WD[s.weekday()]}</span>'
+    return f"{s:%d}–{t:%d.%m}" if s.month == t.month else f"{s:%d.%m}–{t:%d.%m}"
+def ev_item(e):
+    k, lab = status_chip(e); lvl = rel_level(e.get("релевантность", "")); dk, dlab = decision_chip(e.get("решение"))
+    tags = [f'<span class="chip {k}">{lab}</span>'] + (['<span class="chip neutral">вне Москвы</span>'] if e.get("вне Москвы") == "да" else [])
+    tags += [f'<span class="rel {lvl}">{esc(e.get("релевантность", ""))}</span>'] + ([f'<span class="top">приоритет {esc(e["топ-5"])}</span>'] if e.get("топ-5") else [])
+    if e.get("топ-5") or dk != "neutral": tags += [f'<span class="chip {dk}">{esc(dlab)}</span>']   # «не принято» — только у топ-5, иначе шум
+    info = [("Где", e.get("где")), ("Аудитория", e.get("аудитория")), ("Формат", e.get("формат")), ("Слот спикера", e.get("спикер")), ("Почему", e.get("почему")),
+            ("Статус", e.get("статус")), ("Сверено Code", e.get("сверено Code")), ("Источник", e.get("источник"))]
+    dl = "".join(f"<dt>{t}</dt><dd>{esc(v)}</dd>" for t, v in info if v)
+    past = " past" if e["_e"] < TODAY else ""
+    return (f'<li class="{lvl}{past}"><div class="when mono">{ev_when(e)}</div><details><summary><b>{esc(e.get("мероприятие", e["id"]))}</b>'
+            f'<span class="org">{esc(e.get("организатор", ""))}</span></summary><dl>{dl}</dl></details><div class="tags">{"".join(tags)}</div></li>')
+def ev_months(evs):
+    out, cur = [], None
+    for e in evs:
+        key = (e["_s"].year, e["_s"].month)
+        if key != cur:
+            out.append(("</ul>" if cur else "") + f'<h3 class="month">{MONTHS[key[1] - 1]} {key[0]}</h3><ul class="evs">'); cur = key
+        out.append(ev_item(e))
+    return "".join(out) + ("</ul>" if cur else "")
+def dl_item(d):
+    if d["s"] and d["s"] != d["e"] and d["s"] > TODAY: k, lab = "neutral", f'окно с {d["s"]:%d.%m}'
+    else:
+        n = (d["e"] - TODAY).days; k, lab = ("stop" if n <= 1 else "wait" if n <= 7 else "neutral"), until(d["e"])
+    return (f'<li><div class="when"><span class="mono">{esc(d["label"])}</span><span class="chip {k}">{esc(lab)}</span></div>'
+            f'<div><b>{esc(d["short"])}</b> <span class="who">· {esc(d["who"])}</span><span class="why">{esc(d["what"])}</span></div></li>')
+main_ev = [e for e in events if rel_level(e.get("релевантность", "")) != "lo" or e.get("топ-5")]
+low_ev = [e for e in events if e not in main_ev]
+top5 = sorted((e for e in events if e.get("топ-5")), key=lambda e: int(e["топ-5"]))
+top5_html = "".join(f'<li><div><b>{esc(e["мероприятие"])}</b><span class="why">{ev_when(e)} · {esc(e.get("почему", ""))}</span></div>'
+                    f'<span class="chip {decision_chip(e.get("решение"))[0]}">{esc(decision_chip(e.get("решение"))[1])}</span></li>' for e in top5)
+annual_html = ('<div class="scroll"><table class="sku"><thead><tr><th>Мероприятие</th><th>Последний выпуск</th><th>2027</th><th>Комментарий</th></tr></thead><tbody>'
+               + "".join("<tr>" + "".join(f"<td>{esc(c)}</td>" for c in r[:4]) + "</tr>" for r in annual) + "</tbody></table></div>")
+nd = open_dl[0] if open_dl else None
+kal_tile = (f'<a class="tile{" warn" if (nd["e"] - TODAY).days <= 7 else ""}" href="#kalendar"><p class="eyebrow">Мероприятия · ближайший срок</p>'
+            f'<div class="big">{esc(nd["label"])}</div><div class="sub">{esc(nd["short"])} · {esc(until(nd["e"]))}</div></a>') if nd else ""
+kal_html = "" if not events else (
+    '<section class="card" id="kalendar"><p class="eyebrow">Календарь мероприятий · октябрь 2026 – март 2027</p><h2>Недвижимость, девелопмент, кадастр: Москва и МО</h2>'
+    '<p class="meta kal-src">Источник — исследование, которое Игорь вставил 24.09.2026; статусы взяты из него. Два ближайших срока Code сверил на сайтах организаторов, '
+    'остальное не перепроверял. Контакты организаторов — только в elg-pzz. Решения и отметки о сроках правятся в <span class="mono">meropriyatiya/KALENDAR.md</span>.</p>'
+    f'<div class="kal-top"><div><h3>Сроки и решения</h3><ol class="dl">{"".join(dl_item(d) for d in open_dl)}</ol></div>'
+    f'<div><h3>Топ-5 по исследованию</h3><ol class="top5">{top5_html}</ol></div></div>'
+    f'<h3 class="sub-h">Хронология · {len(main_ev)} {plural(len(main_ev), ("событие", "события", "событий"))} со средней и высокой релевантностью</h3>{ev_months(main_ev)}'
+    f'<details class="more"><summary>Ещё {len(low_ev)} {plural(len(low_ev), ("событие", "события", "событий"))} — низкая релевантность или без оценки</summary>{ev_months(low_ev)}</details>'
+    f'<details class="more"><summary>Ежегодные: ориентиры на 2027 год</summary>{annual_html}</details>'
+    '<p class="meta">Для календаря телефона: <span class="mono">meropriyatiya-glavnoe.ics</span> — топ-5, высокая и средне-высокая релевантность, сроки; '
+    '<span class="mono">meropriyatiya-vse.ics</span> — всё. Файлы в «Загрузках» и в dashboard/ репозитория. На Маке: двойной щелчок по файлу, при импорте выбрать «Новый календарь»; '
+    'чтобы обновить — удалить этот календарь и импортировать файл заново.</p></section>')
 # ---------- ждёт Игоря (ведётся вручную, даты абсолютные) ----------
 # Внешние ответы: предложения и запросы, по которым ход не за нами. Отдельно от PENDING, чтобы не тонуть в нём.
 WAITING = [
@@ -94,11 +198,16 @@ WAITING = [
 ]
 
 PENDING = [
+    ("Мероприятия: до 1.10 решить про съезд кадастровых инженеров; срок МЖК 25.09 сайтом конгресса не подтверждён", "24.09 по просьбе Игоря заведён календарь мероприятий на октябрь 2026 – март 2027: раздел «Календарь мероприятий» ниже, источник — meropriyatiya/KALENDAR.md, файлы .ics — в «Загрузках». Сверено на сайтах организаторов 24.09: съезд в Казани 13–16.10 — «1 октября – последний день приема заявок», билет на 4 дня 24 000 ₽; МЖК 5–9.10 в ЦМТ — даты подтверждены, а срока 25.09 на сайте нет, регистрация открыта. Главное по исследованию: КРТ-день CRE 22.10 — договориться о кейсе заранее; MREF 17.11 — купить билет. Полный текст исследования с контактами организаторов — в elg-pzz", "wait"),
+    ("Telegram: пост о 700-ПП вышел дважды — лишний удалить (Игорь)", "24.09 в 12:42 в @rosreestr_iznutri — две одинаковые записи. Return отправил пост, но в ленте он появился позже, чем через 4 секунды; проверка показала ноль, и Code нажал отправку ещё раз. Удалить нижнюю из двух одинаковых записей 12:42: удалять сообщения Code не может. Правило записано: после отправки ждать не меньше 15 секунд и дважды пересчитывать записи", "late"),
+    ("Статья о 700-ПП на Закон.ру: три вопроса по полям без ответа", "статья вышла 24.09 в 12:05 с полями, как в предпросмотре. Открыто: 1) отрасль права — как в образце или «Налоговое и финансовое право»; 2) ключевые слова — Закон.ру берёт пять, стоят первые пять из десяти, про срок возврата среди них ни одного; 3) формулировка про п. 3 ст. 79 НК [Likely] — по памяти Code, в действующей редакции срок на заявление считается со дня формирования положительного сальдо ЕНС, вывод статьи от этого не меняется. По канону текст опубликованной статьи задним числом не правится, поля — можно; решение Игоря", "wait"),
+    ("Статья о 700-ПП — 30-я запись блога; два разбора на сайте; посты в Telegram, VK и Instagram", "24.09: статья «Перечень 700-ПП: где спор выигрывается и где проигрывается срок» опубликована в блоге ELAWYERS GROUP на Закон.ру в 12:05, 30-й записью, с анонсом, ключевыми словами и нижними полями по образцу статьи о КРТ. На сайте — две страницы-разбора по образцу разбора об аренде: perechen-700-pp-spor-i-srok.html и krt-tri-dokumenta.html; ссылки на них — с главной, из «Разборов» и с четырёх смежных страниц, в карте сайта 55 адресов; все файлы сверены по SHA-256 (elg-site a1fa772). Посты: Telegram — 12:42, VK — запись № 19, Instagram — квадратная карточка в стиле профиля и подпись. Фактически опубликованные тексты — teksty/posty-700pp-2026-09-24.md", "go"),
+    ("Форма заказа: в подсказке — шаблон вместо номера и адреса пилота", "замечание Игоря 24.09 со скриншотом: в форме заказа Градпрофиля были видны кадастровый номер и адрес пилотного участка. На обеих страницах с формой, gradprofil.html и proverka-izyatie-krt.html, подсказка и текст ошибки заменены на «77:XX:XXXXXXX:XXX или улица, дом» (elg-site 9f47973). Выложено заменой файлов, SHA-256 на сервере совпал с репозиторием, на живой странице поле показывает шаблон. Других подсказок с цифрами на сайте нет", "go"),
     ("Приватность: страж перед коммитом в elg-docs и elg-site, история обоих репозиториев переписана", "23.09 по решению Игоря: хуки pre-commit и commit-msg (elg-pzz/scripts/privacy_guard.py) не пропускают кадастровый номер не из белого списка, чужую почту, ник, ссылку на профиль, телефон, идентификатор пользователя, сочетание имени с фамилией и всё из файла контактов в elg-pzz. На пробном клоне: строка с данными — коммит остановлен, описание с фамилией — остановлен, чистый — проходит. В боевых elg-docs и elg-site 23.09 (по просьбе Игоря): строка с вымышленным номером не из белого списка — коммит отклонён в обоих, код 1, HEAD не сдвинулся. Панель больше не цитирует тексты коммитов: в «Правках» — число, время и разделы. История переписана и отправлена с заменой: elg-docs — 84 коммита, дерево последней версии совпало байт в байт; elg-site — 8 описаний правок, файлы не менялись. Свежие клоны с GitHub: у стража 0 находок, прямой поиск — 0. Полный скан нашёл больше, чем было известно: кроме ника риелтора, номера заказчика и фамилии клиента — клиентка из бота и её ID, автор отзыва, отзыв клиентки, улицы и неполный номер объектов заказчиков, СНТ заказчика, личная почта Игоря; всё убрано из всех версий", "go"),
     ("Решение 28.09 по кампании считать по orders.csv, а не по целям: измеритель занижает", "23.09 проверено: заказ 22.09 в 15:11 пришёл с формы на /proverka-izyatie-krt.html, лежит в orders.csv, письмо ушло — а цель order_form_g1a за 21–23.09 показывает «Нет данных по цели». Код цели на месте и срабатывает только при успешной отправке; вероятная причина — блокировщик у посетителя или незагрузившийся счётчик [Likely], доказать нельзя. Рядом второй факт: активная кампания № 714560547 за 30 дней дала 21 клик, 979,33 ₽ расхода и ноль конверсий. Если 28-го судить по целям, кампанию погасят за показатель, которого прибор всё равно не видит. Считать заказы по строкам orders.csv с настоящим кадастровым номером, цели Метрики — вторым сигналом", "wait"),
     ("Директ: переносить из автотаргетинга было нечего, вместо этого отсечены запросы про бесплатную карту", "план на 24–25.09 был «перенести запросы автотаргетинга с показами во фразы». Отчёт за 24.08–23.09 показал: строк автотаргетинга ноль, все 9 запросов пришли по фразам через семантическое соответствие. Три из девяти вели людей, которым нужна бесплатная публичная кадастровая карта: «найти на карте», «карта кадастровая…», «поиск по кадастровому номеру». По решению Игоря добавлены минус-фразы в группу № 5800444761 — Директ записал их как -карта и -поиск !по, сам закрепив стоп-слово «по». Ключевые фразы не тронуты, все восемь на месте. Смотреть эффект вместе с точкой 28.09", "go"),
     ("Сайт приведён в порядок по аудиту и отправлен на переобход", "23.09: логотип вынесен из base64 в /img/logo.png — HTML похудел с 2,42 до 1,87 МБ (−23 %), картинка стала кешироваться между страницами; 11 заголовков сокращены до 65 знаков; 42 описания подтянуты до 160 с автоматической проверкой, что ни одна цифра, цена и срок не пропали; в карте сайта проставлены честные даты правки — у 25 страниц они отставали до 61 дня, у 14 их не было вовсе, а Google читает lastmod как сигнал к переобходу. Выложено 64 файла, каждый сверен по SHA-256, ошибок ноль. Переобход отправлен: Яндекс.Вебмастер принял 53 адреса (лимит 150/сутки), Google — повторная отправка карты, 53 страницы, 0 ошибок. Отчёт: otchety/audit-sayta-2026-09-23.md", "go"),
-    ("Пост по КРТ опубликован в Telegram; VK и MAX ждут входа", "статья «Попадает ли ваш дом в КРТ: три документа, которые решают судьбу участка» вышла на Закон.ру 23.09 и была выложена одним сплошным блоком в 6 934 знака без единого абзаца — восстановлено 24 абзаца и 7 заголовков, все 11 ссылок на нормы целы, текст сверен посимвольно и не изменён. Пост в @rosreestr_iznutri опубликован в 09:57; дубль, отправленный по ошибке в 09:58, удалён по слову Игоря. Тексты для VK и MAX готовы в teksty/posty-krt-2026-09-23.md, но вкладки обеих площадок разлогинены — публикация ждёт входа", "wait"),
+    ("Пост по КРТ опубликован в Telegram; в VK и MAX его нет","статья «Попадает ли ваш дом в КРТ: три документа, которые решают судьбу участка» вышла на Закон.ру 23.09 и была выложена одним сплошным блоком в 6 934 знака без единого абзаца — восстановлено 24 абзаца и 7 заголовков, все 11 ссылок на нормы целы, текст сверен посимвольно и не изменён. Пост в @rosreestr_iznutri опубликован в 09:57; дубль, отправленный по ошибке в 09:58, удалён по слову Игоря. Тексты для VK и MAX готовы в teksty/posty-krt-2026-09-23.md. 24.09 вкладка VK снова рабочая — в неё ушёл пост о 700-ПП; пост о КРТ в VK не отправлялся, нужен ли он теперь — решает Игорь. MAX не проверялся", "wait"),
     ("Яндекс Бизнес: обе услуги опубликованы, категория «Экспертизы» проставлена", "проверка 2 900 ₽ и Градпрофиль 9 900 ₽ значатся в «Товарах и услугах», не на модерации. Категория у обеих была пустой — по решению Игоря 23.09 поставлена «Экспертизы», та же, что у исключения из перечня 700-ПП", "go"),
     ("Почтовый сторож: уведомления о письмах включены, автоответы включены; в кроновом PHP не работает json_encode", "решение Игоря 22.09: уведомлять о письмах и показывать тему. Сделано: mail_watch.php пишет список «время + тема» (адреса отправителей не выходят из панели), watch.php его отдаёт, сторож на Маке показывает баннер «Новое письмо». Автоответы включены с защитой «не помним — не отвечаем»: ответ уходит только после успешной записи состояния. Файл состояния трое суток оставался пустым — 23.09 причина найдена и она не в правах: в том PHP, которым крон запускает скрипт, json_encode не работает вовсе — возвращает NULL при json_last_error() == 0, спотыкаясь даже на числе (в веб-SAPI работает: watch.php отдаёт json Маку каждые пять минут). Из-за этого сторож каждые десять минут разбирал одни и те же двадцать писем. Состояние переведено на строки без json, список писем пишется своим кодировщиком, строка «старт» теперь называет версию PHP и работает ли json_encode. Скрипт умел умирать молча — добавлен обработчик обрыва: любая фатальная ошибка идёт в журнал. Выложено и сверено по SHA-256 (elg-pzz f06c2ff). Проверено на живых заходах: в 00:20 состояние записано, в 00:40 — «новых 0», сторож помнит разобранное. Канал целиком: письмо → список → watch.php → баннер на Маке; первый живой баннер 23.09 в 00:21 показал письмо от 22.09 21:43 «Устранение приостановки регистрации жилого дома в Росреестре М. О.» — Игорь на него ответил. Отвечено письмо или нет, сторож знать не может: он читает только «Входящие», отправленные ему не видны — в отчётах это не факт, а UNKNOWN", "wait"),
     ("Сайт: схема участка показана в описании Градпрофиля и образцом", "23.09: в «Что в справке» — пункт о схеме, в «Как выглядит справка» — образец. Образец построен по демонстрационному участку 77:99:0000000:1 с водяным знаком «ДЕМОНСТРАЦИЯ»: karta.py теперь распознаёт синтетический профиль и не подписывает такую схему реестром. Числа на рисунке сошлись с числами профиля до знака — площадь 1 000 м², охранная зона 40 %, территориальная зона 100 %, здание 250 м²: легенда и картинка не должны спорить (elg-site 102305a, живые страницы совпадают с репозиторием по SHA-256)", "go"),
@@ -185,7 +294,7 @@ header{{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-b
 h1{{font:700 28px/1.1 "PT Serif",Georgia,serif;margin:0;text-wrap:balance}} h1 small{{font:400 15px "PT Sans",sans-serif;color:var(--ink-2);margin-left:10px}}
 h2{{font:700 18px/1.2 "PT Serif",Georgia,serif;margin:0 0 12px}} .eyebrow{{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 6px}}
 .meta{{color:var(--ink-2);font-size:13px}} .mono{{font-family:"PT Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}}
-.tiles{{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}}
+.tiles{{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}}
 .tile{{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;box-shadow:var(--shadow);display:grid;gap:4px;align-content:start}}
 .tile .big{{font:700 30px/1 "PT Serif",Georgia,serif;font-variant-numeric:tabular-nums}} .tile .sub{{color:var(--ink-2);font-size:13px}}
 .tile.hot{{border-left:4px solid var(--accent)}} .tile.warn{{border-left:4px solid var(--wait)}}
@@ -205,12 +314,36 @@ ul.log{{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:14px}}
 .step .lbl{{font-size:14px}} .step .val{{font-size:14px;text-align:right}}
 .repos{{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}} .repo-card{{border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:grid;gap:3px}} .repo-card .n{{font-weight:700}}
 .canon{{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px 20px;font-size:13.5px;color:var(--ink-2);counter-reset:c}} .canon div{{padding-left:26px;position:relative}} .canon div::before{{counter-increment:c;content:counter(c);position:absolute;left:0;top:0;font-family:"PT Mono",monospace;color:var(--accent);font-weight:700}}
+a.tile{{color:inherit;text-decoration:none}} a.tile:hover{{border-color:var(--accent)}} a.tile:focus-visible,summary:focus-visible{{outline:2px solid var(--accent);outline-offset:2px}}
+.kal-src{{margin:0 0 16px;max-width:110ch}}
+.kal-top{{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px 32px;margin-bottom:18px}} @media (max-width:900px){{.kal-top{{grid-template-columns:1fr}}}}
+#kalendar h3{{font:700 15px/1.3 "PT Serif",Georgia,serif;margin:0 0 8px;text-wrap:balance}} #kalendar h3.sub-h{{margin-top:6px}}
+#kalendar h3.month{{font:700 12px/1.2 "PT Sans",system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:16px 0 2px}}
+ol.dl,ol.top5{{list-style:none;margin:0;padding:0;display:grid}}
+ol.dl li{{display:grid;grid-template-columns:136px minmax(0,1fr);gap:4px 14px;padding:9px 0;border-top:1px solid var(--line)}} ol.dl li:first-child{{border-top:0;padding-top:0}}
+ol.dl .when{{display:grid;gap:4px;justify-items:start;align-content:start}} ol.dl .when .mono{{font-size:13.5px;font-weight:700}}
+ol.dl .who{{color:var(--ink-2);font-size:13px}} ol.dl .why,ol.top5 .why{{display:block;color:var(--ink-2);font-size:13px;margin-top:2px}}
+@media (max-width:560px){{ol.dl li{{grid-template-columns:1fr}} ol.dl .when{{grid-auto-flow:column;justify-content:start;align-items:center;gap:8px}}}}
+ol.top5{{counter-reset:t}} ol.top5 li{{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:4px 10px;align-items:start;padding:9px 0;border-top:1px solid var(--line)}} ol.top5 li:first-child{{border-top:0;padding-top:0}}
+ol.top5 li::before{{counter-increment:t;content:counter(t);font:700 17px/1.2 "PT Serif",Georgia,serif;color:var(--accent)}}
+@media (max-width:560px){{ol.top5 li{{grid-template-columns:22px minmax(0,1fr)}} ol.top5 li .chip{{grid-column:2;justify-self:start}}}}
+ul.evs{{list-style:none;margin:0;padding:0}}
+ul.evs li{{display:grid;grid-template-columns:88px minmax(0,1fr) minmax(0,auto);gap:4px 14px;align-items:start;padding:9px 0;border-top:1px solid var(--line)}}
+ul.evs li.past{{opacity:.55}} ul.evs li.lo summary b{{font-weight:400}}
+ul.evs .when{{font-size:13.5px;padding-top:1px}} .wd{{color:var(--ink-2);font-size:12px}}
+ul.evs summary{{cursor:pointer}} ul.evs .org{{display:block;color:var(--ink-2);font-size:13px;margin-left:1.1em}}
+ul.evs dl{{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:8px 0 2px 1.1em;font-size:13px}} ul.evs dt{{color:var(--ink-2)}} ul.evs dd{{margin:0}}
+ul.evs .tags{{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end;max-width:300px}}
+@media (max-width:760px){{ul.evs li{{grid-template-columns:64px minmax(0,1fr)}} ul.evs .tags{{grid-column:2;justify-content:flex-start;max-width:none}} ul.evs dl{{grid-template-columns:1fr;gap:0}} ul.evs dd{{margin-bottom:5px}}}}
+.rel{{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}} .rel.hi{{background:var(--ready-bg);color:var(--ready)}} .rel.mid{{background:var(--neutral-bg);color:var(--ink)}} .rel.lo{{color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line)}}
+.top{{display:inline-block;font:700 11.5px/1.6 "PT Mono",ui-monospace,monospace;padding:1px 7px;border-radius:3px;background:var(--accent);color:var(--accent-ink)}}
+details.more{{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}} details.more>summary{{cursor:pointer;font-weight:700;font-size:14px}} details.more[open]>summary{{margin-bottom:6px}}
 footer{{color:var(--ink-2);font-size:12.5px;border-top:1px solid var(--line);padding-top:10px}}
 a{{color:var(--accent)}} a:focus-visible,.chip:focus-visible{{outline:2px solid var(--accent);outline-offset:2px}}
 @media (prefers-reduced-motion: no-preference){{.step .bar::after{{transition:width .4s ease}}}}
 </style>
 <div class="wrap">
-<header><h1>ELG Градпрофиль <small>панель состояния</small></h1><div class="meta">собрано {esc(now)} · источники: PRICE.md, DOCS.md, git, elg-pzz/out (только счётчики)</div></header>
+<header><h1>ELG Градпрофиль <small>панель состояния</small></h1><div class="meta">собрано {esc(now)} · источники: PRICE.md, DOCS.md, git, elg-pzz/out (только счётчики), meropriyatiya/KALENDAR.md</div></header>
 
 <div class="tiles">
  <div class="tile hot"><p class="eyebrow">Прайс</p><div class="big">{len(rows)} SKU</div><div class="sub">{esc(price_status)}</div></div>
@@ -218,6 +351,7 @@ a{{color:var(--accent)}} a:focus-visible,.chip:focus-visible{{outline:2px solid 
  <div class="tile"><p class="eyebrow">Индекс актов</p><div class="big">{esc(f"{index_size:,}".replace(",", NB))}</div><div class="sub">актов mos.ru и ДГИ · собран {esc(index_date)} ({esc(idx_age())})</div></div>
  <div class="tile"><p class="eyebrow">Документы собраны</p><div class="big">{n_spravka}<span style="font-size:16px"> Г2</span> · {n_snesut - n_synth}<span style="font-size:16px"> Г1а</span></div><div class="sub">{n_synth} демонстрационный образец с водяным знаком; живых выписок ЕГРН разобрано: {egrn_parsed}</div></div>
  <div class="tile"><p class="eyebrow">Задания Claude Code</p><div class="big">{tasks_done}</div><div class="sub">файлов заданий исполнено, {tasks_active} действует; всего задач 1–49</div></div>
+ {kal_tile}
 </div>
 
 <div class="cols">
@@ -235,6 +369,8 @@ a{{color:var(--accent)}} a:focus-visible,.chip:focus-visible{{outline:2px solid 
  </div>
 </div>
 
+{kal_html}
+
 <section class="card"><p class="eyebrow">Общая память</p><h2>Репозитории и контроль</h2><div class="repos">
 {"".join(f'<div class="repo-card"><span class="n">{esc(r["name"])}</span><span class="mono">{r["commits"]} коммитов · {r["files"]} файлов</span><span class="meta">последняя правка: {esc(r["last"])}</span></div>' for r in repos)}
  <div class="repo-card"><span class="n">Верификаторы</span><span class="mono">snesut.py — 10 проверок · spravka.py — 8</span><span class="meta">блокируют файл: служебные слова, пустые значения, зелёный без выписки, синтетика без знака, несогласованный глагол, сумма с ₽ вне config_price.json</span></div>
@@ -246,3 +382,56 @@ a{{color:var(--accent)}} a:focus-visible,.chip:focus-visible{{outline:2px solid 
 </div>
 """
 out = f"{DOCS}/dashboard/index.html"; open(out, "w", encoding="utf-8").write(page); print("готово:", out, len(page), "байт;", len(rows), "SKU;", n_spravka, "справок;", n_snesut, "отчётов")
+# ---------- два файла .ics из KALENDAR.md: весь день, без часовых поясов; напоминания — по правилам из шапки KALENDAR.md ----------
+def ics_text(s): return s.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
+def ics_fold(line):  # RFC 5545: строка не длиннее 75 октетов, перенос — CRLF и пробел; символ UTF-8 не режется
+    b, parts = line.encode("utf-8"), []
+    while len(b) > (75 if not parts else 74):
+        cut = 75 if not parts else 74
+        while (b[cut] & 0xC0) == 0x80: cut -= 1
+        if b[cut - 1:cut] == b"\\": cut -= 1          # не разрывать экранирование вроде \n и \,
+        parts.append(b[:cut]); b = b[cut:]
+    return b"\r\n ".join(parts + [b]).decode("utf-8")
+def ics_url(src):
+    first = re.split(r"[,\s]+", (src or "").strip())[0]
+    host, _, path = first.partition("/")
+    try: host = host.encode("idna").decode("ascii")
+    except Exception: return ""
+    return ("https://" + host + ("/" + path if path else "")) if host else ""
+STAMP = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+def vevent(uid, d1, d2, summary, desc, loc="", url="", trigger=""):
+    L = ["BEGIN:VEVENT", f"UID:{uid}", f"DTSTAMP:{STAMP}", f"DTSTART;VALUE=DATE:{d1:%Y%m%d}", f"DTEND;VALUE=DATE:{d2 + datetime.timedelta(days=1):%Y%m%d}",
+         "SUMMARY:" + ics_text(summary), "DESCRIPTION:" + ics_text(desc)] + (["LOCATION:" + ics_text(loc)] if loc else []) + (["URL:" + url] if url else []) + ["TRANSP:TRANSPARENT"]
+    if trigger: L += ["BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + ics_text(summary), f"TRIGGER:{trigger}", "END:VALARM"]
+    return L + ["END:VEVENT"]
+def ics_event(e):
+    approx = e.get("точность") == "ориентир"
+    summary = (f'Топ-{e["топ-5"]} · ' if e.get("топ-5") else "") + ("Дата не объявлена · " if approx else "") + e.get("мероприятие", e["id"])
+    info = [("Когда", e.get("когда")), ("Организатор", e.get("организатор")), ("Где", e.get("где")), ("Аудитория", e.get("аудитория")), ("Формат", e.get("формат")),
+            ("Слот спикера", e.get("спикер")), ("Статус", e.get("статус")), ("Релевантность", e.get("релевантность", "") + (" — " + e["почему"] if e.get("почему") else "")),
+            ("Решение", e.get("решение")), ("Сверено Code", e.get("сверено Code")), ("Источник", e.get("источник"))]
+    desc = "\n".join(f"{k}: {v}" for k, v in info if v)
+    todo = [d["what"] for d in open_dl if d["ev"] == e["id"] and d["e"] <= e["_s"]]
+    if todo: desc += "\n\nДо события: " + " / ".join(todo)
+    if approx: desc += "\n\nДата в календаре условная: первый день окна «" + e.get("когда", "") + "»."
+    desc += f"\n\nКалендарь мероприятий ELAWYERS GROUP, собран {TODAY:%d.%m.%Y}."
+    return vevent(f'elg-kalendar-{e["id"]}', e["_s"], e["_s"] if approx else e["_e"], summary, desc, "" if approx else e.get("где", ""),
+                  ics_url(e.get("источник")), "-P13DT15H" if e.get("топ-5") else "")
+def ics_deadline(d):
+    if not d["s"]: return []                          # «до события» — напоминание стоит в самом событии
+    window = d["s"] != d["e"]
+    if window and d["s"] <= TODAY: return []          # окно уже открыто
+    day = d["s"] if window else d["e"]; title = EV.get(d["ev"], {}).get("мероприятие", d["ev"])
+    desc = f'{d["what"]}\nКто: {d["who"]}\nСобытие: {title}' + (f'\nОкно: {d["label"]}' if window else "")
+    return vevent(f'elg-kalendar-srok-{d["ev"]}-{d["e"]:%Y%m%d}', day, day, ("Окно открылось · " if window else "Срок · ") + d["short"], desc, trigger="PT9H" if window else "-PT15H")
+def ics_file(name, evs, cal):
+    L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//ELAWYERS GROUP//Kalendar meropriyatiy//RU", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:" + ics_text(cal), "X-WR-TIMEZONE:Europe/Moscow"]
+    for e in evs: L += ics_event(e)
+    for d in open_dl: L += ics_deadline(d)
+    L.append("END:VCALENDAR")
+    open(f"{DOCS}/dashboard/{name}", "w", encoding="utf-8", newline="").write("\r\n".join(ics_fold(l) for l in L) + "\r\n")
+    return sum(1 for l in L if l == "BEGIN:VEVENT")
+if events:
+    g = ics_file("meropriyatiya-glavnoe.ics", [e for e in events if e.get("топ-5") or rel_level(e.get("релевантность", "")) == "hi"], "ELG · мероприятия · главное")
+    v = ics_file("meropriyatiya-vse.ics", events, "ELG · мероприятия · все")
+    print("календарь:", len(events), "событий,", len(open_dl), "открытых сроков; .ics — главное", g, "записей, все", v)

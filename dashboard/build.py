@@ -285,7 +285,7 @@ def today_list():
     items = [r for r in repos if r["times"]]
     if not items: return "<li>сегодня правок нет</li>"
     return "\n".join(f'<li><span class="mono t">{esc(r["times"][0])}–{esc(r["times"][-1])}</span> <span class="repo">{esc(r["name"].split(" ")[0])}</span> '
-                     f'{len(r["times"])} правок · {esc(", ".join(r["areas"]) or "—")}</li>' for r in items)
+                     f'{len(r["times"])} {plural(len(r["times"]), ("правка", "правки", "правок"))} · {esc(", ".join(r["areas"]) or "—")}</li>' for r in items)
 funnel = [("Г1а", "Проверка, экспресс", 2900), ("Г2", "Градпрофиль-экспресс", 9900), ("Г3", "Градпрофиль-полный", 25000), ("Г5", "Юридическая работа, от", 100000)]
 def rub(v): return f"{v:,}".replace(",", NB) + NB + "₽"
 funnel_html = "".join(f'<div class="step"><div class="bar" style="--w:{max(6, round(100*(v/100000)**0.5))}%"></div><div class="lbl"><span class="mono">{s}</span> {esc(n)}</div><div class="val mono">{rub(v)}</div></div>' for s, n, v in funnel)
@@ -379,7 +379,7 @@ a{{color:var(--accent)}} a:focus-visible,.chip:focus-visible{{outline:2px solid 
 {kal_html}
 
 <section class="card"><p class="eyebrow">Общая память</p><h2>Репозитории и контроль</h2><div class="repos">
-{"".join(f'<div class="repo-card"><span class="n">{esc(r["name"])}</span><span class="mono">{r["commits"]} коммитов · {r["files"]} файлов</span><span class="meta">последняя правка: {esc(r["last"])}</span></div>' for r in repos)}
+{"".join(f'<div class="repo-card"><span class="n">{esc(r["name"])}</span><span class="mono">{r["commits"]} {plural(r["commits"], ("коммит", "коммита", "коммитов"))} · {r["files"]} {plural(r["files"], ("файл", "файла", "файлов"))}</span><span class="meta">последняя правка: {esc(r["last"])}</span></div>' for r in repos)}
  <div class="repo-card"><span class="n">Верификаторы</span><span class="mono">snesut.py — 10 проверок · spravka.py — 11</span><span class="meta">блокируют файл: служебные слова, пустые значения, зелёный без выписки, синтетика без знака, несогласованный глагол, сумма с ₽ вне config_price.json, «ожидается ответ ИАИС ОГД» без поданного запроса, абзац юриста со словами Claude без «утверждаю» Игоря</span></div>
  <div class="repo-card"><span class="n">Инструменты</span><span class="mono">krt_lookup · egrn_xml · nspd_addr · nspd_bld</span><span class="meta">фон ложных класс-соседей нечёткого поиска: 9 из 100 реальных номеров вне индекса (замер 11.09.2026)</span></div>
 </div></section>

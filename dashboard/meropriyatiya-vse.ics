@@ -7,7 +7,7 @@ X-WR-CALNAME:ELG · мероприятия · все
 X-WR-TIMEZONE:Europe/Moscow
 BEGIN:VEVENT
 UID:elg-kalendar-ved-industry-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20260929
 DTEND;VALUE=DATE:20260930
 SUMMARY:Конференция «Индустриальная недвиж
@@ -31,7 +31,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-rosreestr-ki-2026-09-29
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20260929
 DTEND;VALUE=DATE:20260930
 SUMMARY:Совещание Управления Росреестра по 
@@ -58,11 +58,11 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-mzhk-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261005
 DTEND;VALUE=DATE:20261010
-SUMMARY:Топ-5 · Международный жилищный конгр
- есс (МЖК)
+SUMMARY:Приоритет 5 · Международный жилищный
+  конгресс (МЖК)
 DESCRIPTION:Когда: 5–9.10.2026\nОрганизатор: Realcongress
   (при поддержке Минстроя России и Фонда Р
  осконгресс\; РГУД — партнёр)\nГде: Москва
@@ -99,14 +99,14 @@ URL:https://realcongress.ru
 TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Топ-5 · Международный жилищный кон
- гресс (МЖК)
+DESCRIPTION:Приоритет 5 · Международный жилищн
+ ый конгресс (МЖК)
 TRIGGER:-P13DT15H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-kommersant-eho-goroda-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261007
 DTEND;VALUE=DATE:20261008
 SUMMARY:«Эхо города: девелопмент в медиапрос
@@ -125,7 +125,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-rgud-kommercheskaya-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261007
 DTEND;VALUE=DATE:20261009
 SUMMARY:Серия конференций: «Трансформация р
@@ -153,7 +153,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-ki-sezd-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261013
 DTEND;VALUE=DATE:20261017
 SUMMARY:XII Всероссийский съезд кадастровых и
@@ -197,7 +197,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-proptech-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261014
 DTEND;VALUE=DATE:20261015
 SUMMARY:Proptech Digital Forum & Index 2026 «Цифровизация де
@@ -215,7 +215,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-cre-ofis-360-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261015
 DTEND;VALUE=DATE:20261016
 SUMMARY:«Офисный девелопмент 360: тренды\, стр
@@ -238,7 +238,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-ved-bankrotstvo-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261016
 DTEND;VALUE=DATE:20261017
 SUMMARY:«Практика банкротства»
@@ -257,10 +257,11 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-cre-krt-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261022
 DTEND;VALUE=DATE:20261023
-SUMMARY:Топ-1 · «КРТ: образовательный день»
+SUMMARY:Приоритет 1 · «КРТ: образовательный д
+ ень»
 DESCRIPTION:Когда: 22.10.2026\nОрганизатор: CRE (анонс
   в афише CRE)\nГде: Москва (площадка ⚠️)\nАу
  дитория: гендиректора\, директора по раз
@@ -282,13 +283,14 @@ URL:https://cre.ru/activity
 TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Топ-1 · «КРТ: образовательный день»
+DESCRIPTION:Приоритет 1 · «КРТ: образовательны
+ й день»
 TRIGGER:-P13DT15H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-mkod-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261022
 DTEND;VALUE=DATE:20261023
 SUMMARY:Международная конференция МКОД-2026
@@ -305,7 +307,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-ved-promyshlennost-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261028
 DTEND;VALUE=DATE:20261029
 SUMMARY:Форум «Промышленность нового времен
@@ -326,7 +328,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-utilicon-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261110
 DTEND;VALUE=DATE:20261111
 SUMMARY:UtiliCon 2026 (ЖКХ и строительство)
@@ -343,7 +345,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-hitech-building-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261111
 DTEND;VALUE=DATE:20261112
 SUMMARY:Hi-Tech Building
@@ -366,11 +368,12 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-mref-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261117
 DTEND;VALUE=DATE:20261118
-SUMMARY:Топ-2 · MREF: 20 лет экспертизы (XX Московс
- кий форум лидеров рынка недвижимости)
+SUMMARY:Приоритет 2 · MREF: 20 лет экспертизы (XX М
+ осковский форум лидеров рынка недвижимо
+ сти)
 DESCRIPTION:Когда: 17.11.2026\, 09:30–18:00\nОрганизатор:
   «Ведомости»\nГде: Москва\, Radisson Collection Hotel
  \, Кутузовский пр-т\, 2/1\; 09:30–18:00\, фуршет\nА
@@ -395,14 +398,15 @@ URL:https://events.vedomosti.ru/events/mref26
 TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Топ-2 · MREF: 20 лет экспертизы (XX Моско
- вский форум лидеров рынка недвижимости)
+DESCRIPTION:Приоритет 2 · MREF: 20 лет экспертизы (X
+ X Московский форум лидеров рынка недвижи
+ мости)
 TRIGGER:-P13DT15H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-summitstroy-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261119
 DTEND;VALUE=DATE:20261121
 SUMMARY:XI Всероссийский саммит застройщиков
@@ -422,7 +426,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-zodchestvo-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261124
 DTEND;VALUE=DATE:20261125
 SUMMARY:Фестиваль «Зодчество. Россия»
@@ -439,7 +443,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-nisf-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261125
 DTEND;VALUE=DATE:20261126
 SUMMARY:II Национальный инвестиционно-строит
@@ -460,7 +464,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-kommersant-itogi-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261201
 DTEND;VALUE=DATE:20261202
 SUMMARY:Дата не объявлена · «Итоги года. Комм
@@ -487,7 +491,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-mbk-itogi-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261201
 DTEND;VALUE=DATE:20261202
 SUMMARY:Дата не объявлена · Саммит МБК «Итог
@@ -509,7 +513,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-zhkh-konf-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261214
 DTEND;VALUE=DATE:20261215
 SUMMARY:«ЖКХ Конф 2026»
@@ -525,7 +529,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-repa-zavtrak-2026
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261220
 DTEND;VALUE=DATE:20261221
 SUMMARY:Дата не объявлена · Новогодний бизне
@@ -546,7 +550,7 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-kommersant-dnv-2027
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20270201
 DTEND;VALUE=DATE:20270202
 SUMMARY:Дата не объявлена · «Девелопмент нов
@@ -568,13 +572,13 @@ TRANSP:TRANSPARENT
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-rsn-2027
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20270224
 DTEND;VALUE=DATE:20270227
-SUMMARY:Топ-3 · Российская строительная неде
- ля-2027 (RosBuild\, «Мир стекла»\, форум «Строим 
- будущее России вместе») и салон «Малоэта
- жное домостроение»
+SUMMARY:Приоритет 3 · Российская строительна
+ я неделя-2027 (RosBuild\, «Мир стекла»\, форум «С
+ троим будущее России вместе») и салон «М
+ алоэтажное домостроение»
 DESCRIPTION:Когда: 24–26.02.2027\nОрганизатор: Экспо
  центр\nГде: Москва\, ВК «Тимирязев Центр»
  \, Верхняя аллея\, 6\, стр. 1\nАудитория: итог
@@ -606,21 +610,21 @@ URL:https://rsn-expo.ru
 TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Топ-3 · Российская строительная не
- деля-2027 (RosBuild\, «Мир стекла»\, форум «Стро
- им будущее России вместе») и салон «Мало
- этажное домостроение»
+DESCRIPTION:Приоритет 3 · Российская строитель
+ ная неделя-2027 (RosBuild\, «Мир стекла»\, форум 
+ «Строим будущее России вместе») и салон 
+ «Малоэтажное домостроение»
 TRIGGER:-P13DT15H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-yur-sammit-2027
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20270320
 DTEND;VALUE=DATE:20270321
-SUMMARY:Топ-4 · Дата не объявлена · Юридическ
- ий «Саммит лидеров строительной отрасли
- »
+SUMMARY:Приоритет 4 · Дата не объявлена · Юри
+ дический «Саммит лидеров строительной о
+ трасли»
 DESCRIPTION:Когда: конец марта 2027\nОрганизатор:
   Строительный юридический форум (оргком
  итет — юрфирма ProLex\; председатель оргком
@@ -645,15 +649,15 @@ URL:https://summit.constructionconf.ru
 TRANSP:TRANSPARENT
 BEGIN:VALARM
 ACTION:DISPLAY
-DESCRIPTION:Топ-4 · Дата не объявлена · Юридиче
- ский «Саммит лидеров строительной отрас
- ли»
+DESCRIPTION:Приоритет 4 · Дата не объявлена · Ю
+ ридический «Саммит лидеров строительно
+ й отрасли»
 TRIGGER:-P13DT15H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-srok-mzhk-2026-20260925
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20260925
 DTEND;VALUE=DATE:20260926
 SUMMARY:Срок · МЖК: решить\, идём ли\; срок сай
@@ -678,7 +682,7 @@ END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-srok-rosreestr-ki-2026-09-29-20260929
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20260929
 DTEND;VALUE=DATE:20260930
 SUMMARY:Срок · Совещание Росреестра с КИ
@@ -698,7 +702,7 @@ END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-srok-ki-sezd-2026-20261001
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261001
 DTEND;VALUE=DATE:20261002
 SUMMARY:Срок · Съезд КИ: последний день заяво
@@ -723,7 +727,7 @@ END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-srok-mtpp-20261031
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261001
 DTEND;VALUE=DATE:20261002
 SUMMARY:Окно открылось · Проверить календар
@@ -742,7 +746,7 @@ END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-srok-kommersant-itogi-2026-20261130
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261001
 DTEND;VALUE=DATE:20261002
 SUMMARY:Окно открылось · «Коммерсант»: предл
@@ -762,7 +766,7 @@ END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-srok-rsn-2027-20261231
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261101
 DTEND;VALUE=DATE:20261102
 SUMMARY:Окно открылось · РСН-2027: заявка в про
@@ -789,7 +793,7 @@ END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-srok-yur-sammit-2027-20270131
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20261201
 DTEND;VALUE=DATE:20261202
 SUMMARY:Окно открылось · Юрсаммит: предложит
@@ -810,7 +814,7 @@ END:VALARM
 END:VEVENT
 BEGIN:VEVENT
 UID:elg-kalendar-srok-mzhk-2026-20270531
-DTSTAMP:20260924T103427Z
+DTSTAMP:20260924T103602Z
 DTSTART;VALUE=DATE:20270301
 DTEND;VALUE=DATE:20270302
 SUMMARY:Окно открылось · МЖК-2027: риелторский 
